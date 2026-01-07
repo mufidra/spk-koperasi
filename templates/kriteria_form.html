@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}{{ action }} Kriteria{% endblock %}
+{% block header %}{{ action }} Data Kriteria{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Form {{ action }} Kriteria</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="kode" class="form-label">Kode Kriteria *</label>
+                        <input type="text" class="form-control" id="kode" name="kode" 
+                               value="{{ kriteria.kode if kriteria else '' }}" 
+                               pattern="C[0-9]+" 
+                               title="Format: C1, C2, C3, dst" required>
+                        <div class="form-text">Format: C1, C2, C3, dst.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="nama" class="form-label">Nama Kriteria *</label>
+                        <input type="text" class="form-control" id="nama" name="nama" 
+                               value="{{ kriteria.nama if kriteria else '' }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="atribut" class="form-label">Jenis Kriteria *</label>
+                        <select class="form-select" id="atribut" name="atribut" required>
+                            <option value="benefit" {% if kriteria and kriteria.atribut == 'benefit' %}selected{% endif %}>
+                                Benefit (Semakin besar semakin baik)
+                            </option>
+                            <option value="cost" {% if kriteria and kriteria.atribut == 'cost' %}selected{% endif %}>
+                                Cost (Semakin kecil semakin baik)
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="bobot" class="form-label">Bobot Kriteria *</label>
+                        <input type="number" class="form-control" id="bobot" name="bobot" 
+                               value="{{ kriteria.bobot if kriteria else '0.00' }}" 
+                               step="0.01" min="0" max="1" required>
+                        <div class="form-text">Contoh: 0.25, 0.15, 0.20</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="keterangan" class="form-label">Keterangan Skor</label>
+                        <textarea class="form-control" id="keterangan" name="keterangan" 
+                                  rows="4" placeholder="Contoh:&#10;≤ Rp 5.000.000:90&#10;Rp 5.000.000 – Rp 20.000.000:80&#10;Rp 21.000.000 – Rp 50.000.000:70&#10;> Rp 50.000.000:60">{{ kriteria.keterangan if kriteria else '' }}</textarea>
+                        <div class="form-text">
+                            Format: <code>keterangan:nilai</code> (satu baris untuk setiap kondisi)
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="alert alert-info">
+                <h6>Kriteria Default Sistem:</h6>
+                <ol class="mb-0">
+                    <li><strong>C1:</strong> Besarnya Jumlah Pinjaman (Benefit) - Bobot: 0.25</li>
+                    <li><strong>C2:</strong> Banyak Jumlah Tabungan (Benefit) - Bobot: 0.15</li>
+                    <li><strong>C3:</strong> Keaktifan (Benefit) - Bobot: 0.25</li>
+                    <li><strong>C4:</strong> Lama Keanggotaan (Benefit) - Bobot: 0.20</li>
+                    <li><strong>C5:</strong> Riwayat Tunggakan (Cost) - Bobot: 0.15</li>
+                </ol>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('kriteria') }}" class="btn btn-secondary">Kembali</a>
+                <button type="submit" class="btn btn-primary">Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

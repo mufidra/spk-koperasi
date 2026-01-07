@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Hasil Ranking{% endblock %}
+{% block header %}Hasil Ranking Nasabah Terbaik{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">🏆 Ranking Nasabah Penerima Reward</h5>
+        <button class="btn btn-success" onclick="window.print()">🖨️ Cetak Laporan</button>
+    </div>
+
+    <div class="card-body">
+        {% if hasil_perhitungan %}
+
+        <!-- ================= TABLE RANKING ================= -->
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Ranking</th>
+                        <th>Kode</th>
+                        <th>Nama Nasabah</th>
+                        <th>Nilai Akhir (Vᵢ)</th>
+                        <th>Keterangan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for hasil in hasil_perhitungan %}
+                    <tr>
+                        <td>
+                            <span class="badge 
+                                {% if loop.index == 1 %}bg-warning
+                                {% elif loop.index <= 3 %}bg-info
+                                {% else %}bg-secondary{% endif %}">
+                                #{{ loop.index }}
+                            </span>
+                        </td>
+                        <td><strong>{{ hasil.nasabah.kode }}</strong></td>
+                        <td>{{ hasil.nasabah.nama }}</td>
+                        <td>
+                            <span class="badge bg-primary">
+                                {{ "%.3f"|format(hasil.nilai_akhir) }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if loop.index == 1 %}
+                                <span class="badge bg-success">REKOMENDASI UTAMA</span>
+                            {% elif loop.index <= 3 %}
+                                <span class="badge bg-info">REKOMENDASI</span>
+                            {% else %}
+                                <span class="badge bg-secondary">DIPERTIMBANGKAN</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ================= VISUALISASI ================= -->
+        <hr class="my-4">
+
+        <h5 class="mb-3">📊 Visualisasi Hasil Ranking</h5>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-3">
+                    <div class="card-header bg-primary text-white">
+                        Diagram Ranking Nasabah
+                    </div>
+                    <div class="card-body">
+                        <div id="rankingChart" style="height:350px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card mb-3">
+                    <div class="card-header bg-success text-white">
+                        Distribusi Kategori
+                    </div>
+                    <div class="card-body">
+                        <div id="kategoriChart" style="height:350px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= KESIMPULAN ================= -->
+        <div class="alert alert-success mt-4">
+            <h5>🎯 Kesimpulan</h5>
+            <p>
+                Nasabah <strong>{{ hasil_perhitungan[0].nasabah.nama }}</strong>
+                ({{ hasil_perhitungan[0].nasabah.kode }}) dengan nilai
+                <strong>{{ "%.3f"|format(hasil_perhitungan[0].nilai_akhir) }}</strong>
+                direkomendasikan sebagai penerima reward utama.
+            </p>
+        </div>
+
+        {% else %}
+        <div class="alert alert-warning">
+            Belum ada data perhitungan SAW.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    {% if hasil_perhitungan %}
+    const data = [
+        {% for h in hasil_perhitungan %}
+        {
+            nama: "{{ h.nasabah.nama }}",
+            skor: {{ (h.nilai_akhir * 100) | round(2) }},
+            kategori: "{{ 'Sangat Baik' if loop.index == 1 else 'Baik' if loop.index <= 3 else 'Cukup' }}"
+        },
+        {% endfor %}
+    ];
+
+    // Mapping warna berdasarkan kategori
+    function getColorByKategori(kategori) {
+        if (kategori === 'Sangat Baik') return '#5470C6'; // Biru
+        if (kategori === 'Baik') return '#91CC75';       // Hijau
+        if (kategori === 'Cukup') return '#FAC858';      // Kuning
+        return '#EE6666';                                // Merah
+    }
+
+    /* ================= BAR CHART ================= */
+    const barChart = echarts.init(document.getElementById('rankingChart'));
+    barChart.setOption({
+        tooltip: {
+            trigger: 'axis',
+            formatter: function (params) {
+                const d = data[params[0].dataIndex];
+                return `
+                    <strong>${d.nama}</strong><br>
+                    Skor: ${d.skor}%<br>
+                    Kategori: ${d.kategori}
+                `;
+            }
+        },
+        xAxis: {
+            type: 'value',
+            max: 100,
+            axisLabel: { formatter: '{value}%' }
+        },
+        yAxis: {
+            type: 'category',
+            data: data.map(d => d.nama),
+            inverse: true
+        },
+        series: [{
+            type: 'bar',
+            data: data.map(d => ({
+                value: d.skor,
+                itemStyle: {
+                    color: getColorByKategori(d.kategori)
+                }
+            })),
+            label: {
+                show: true,
+                position: 'right',
+                formatter: '{c}%'
+            }
+        }]
+    });
+
+    /* ================= DONUT CHART ================= */
+    const kategoriCount = {};
+    data.forEach(d => {
+        kategoriCount[d.kategori] = (kategoriCount[d.kategori] || 0) + 1;
+    });
+
+    const donutChart = echarts.init(document.getElementById('kategoriChart'));
+    donutChart.setOption({
+        tooltip: { trigger: 'item' },
+        legend: { bottom: 0 },
+        series: [{
+            type: 'pie',
+            radius: ['40%', '70%'],
+            data: Object.keys(kategoriCount).map(k => ({
+                name: k,
+                value: kategoriCount[k],
+                itemStyle: { color: getColorByKategori(k) }
+            })),
+            label: { formatter: '{b}: {c}' }
+        }]
+    });
+
+    window.addEventListener('resize', () => {
+        barChart.resize();
+        donutChart.resize();
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}

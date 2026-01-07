@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Input Nilai{% endblock %}
+{% block header %}Input Nilai untuk {{ nasabah.nama }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Form Input Nilai</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6>Informasi Nasabah</h6>
+                            <p class="mb-1"><strong>Kode:</strong> {{ nasabah.kode }}</p>
+                            <p class="mb-1"><strong>Nama:</strong> {{ nasabah.nama }}</p>
+                            <p class="mb-0"><strong>Telepon:</strong> {{ nasabah.telepon }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6>Petunjuk Nilai</h6>
+                            <p class="mb-0">Isi nilai sesuai skala yang telah ditentukan. Nilai harus dalam rentang yang sesuai.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Kriteria</th>
+                            <th>Skala Nilai</th>
+                            <th>Atribut</th>
+                            <th>Bobot</th>
+                            <th>Nilai</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for kriteria in kriterias %}
+                        <tr>
+                            <td>
+                                <strong>{{ kriteria.kode }}</strong><br>
+                                <small>{{ kriteria.nama }}</small>
+                            </td>
+                            <td>
+                                {% if kriteria.kode == 'C1' %}
+                                60-90
+                                {% elif kriteria.kode == 'C2' %}
+                                60-85
+                                {% elif kriteria.kode == 'C3' %}
+                                70-80
+                                {% elif kriteria.kode == 'C4' %}
+                                60-80
+                                {% elif kriteria.kode == 'C5' %}
+                                55-75
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if kriteria.atribut == 'benefit' %}
+                                <span class="badge bg-success">Benefit</span>
+                                {% else %}
+                                <span class="badge bg-danger">Cost</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ kriteria.bobot }}</td>
+                            <td>
+                                <input type="number" class="form-control" 
+                                       name="nilai_{{ kriteria.id }}" 
+                                       value="{{ nilai_dict[kriteria.id] if kriteria.id in nilai_dict else '' }}"
+                                       step="1" required
+                                       {% if kriteria.kode == 'C1' %}min="60" max="90"
+                                       {% elif kriteria.kode == 'C2' %}min="60" max="85"
+                                       {% elif kriteria.kode == 'C3' %}min="70" max="80"
+                                       {% elif kriteria.kode == 'C4' %}min="60" max="80"
+                                       {% elif kriteria.kode == 'C5' %}min="55" max="75"{% endif %}>
+                                <small class="text-muted">
+                                    {% if kriteria.kode == 'C1' %}Pinjaman
+                                    {% elif kriteria.kode == 'C2' %}Tabungan
+                                    {% elif kriteria.kode == 'C3' %}Keaktifan
+                                    {% elif kriteria.kode == 'C4' %}Keanggotaan
+                                    {% elif kriteria.kode == 'C5' %}Tunggakan{% endif %}
+                                </small>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="d-flex justify-content-between mt-3">
+                <a href="{{ url_for('nilai_alternatif') }}" class="btn btn-secondary">Kembali</a>
+                <button type="submit" class="btn btn-primary">Simpan Nilai</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

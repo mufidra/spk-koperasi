@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Laporan{% endblock %}
+{% block header %}Laporan Sistem SPK{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Laporan Data Sistem</h5>
+        <div>
+            <button class="btn btn-success" onclick="cetakLaporan()">🖨️ Cetak</button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0">Ringkasan Sistem</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Nama Sistem:</strong> SPK Pemilihan Nasabah Terbaik</p>
+                        <p><strong>Tujuan:</strong> Menentukan nasabah penerima reward tahunan</p>
+                        <p><strong>Metode:</strong> Simple Additive Weighting (SAW)</p>
+                        <p><strong>Tanggal Generate:</strong> <span id="current-date"></span></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">Kriteria yang Digunakan</h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">C1: Besarnya Jumlah Pinjaman (Benefit)</li>
+                            <li class="list-group-item">C2: Banyak Jumlah Tabungan (Benefit)</li>
+                            <li class="list-group-item">C3: Keaktifan (Cost)</li>
+                            <li class="list-group-item">C4: Lama Keanggotaan (Benefit)</li>
+                            <li class="list-group-item">C5: Riwayat Tunggakan (Benefit)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="visualisasi-ranking" class="mb-4"></div>
+        <div id="laporan-data"></div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function () {
+    // tanggal
+    document.getElementById('current-date').textContent = new Date().toLocaleDateString('id-ID', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    $("#visualisasi-ranking").html(`
+        <div class="text-center py-5">
+            <div class="spinner-border"></div>
+            <p class="mt-3">Mengambil data ranking...</p>
+        </div>
+    `);
+
+    $("#laporan-data").html(`
+        <div class="text-center py-5">
+            <div class="spinner-border"></div>
+            <p class="mt-2">Mengambil data laporan...</p>
+        </div>
+    `);
+
+    loadRanking();
+    loadLaporan();
+});
+
+// FIX #1 — endpoint ranking benar: /api/ranking-visual
+function loadRanking() {
+    $.getJSON("/api/ranking-visual", function (res) {
+        if (!res.success || !res.data.length) {
+            $('#visualisasi-ranking').html(`<div class="alert alert-warning">Tidak ada data ranking!</div>`);
+            return;
+        }
+
+        let data = res.data;
+        let html = `
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white"><strong>Ranking Top Nasabah</strong></div>
+                <div class="card-body">
+                    <table class="table table-bordered table-striped text-center">
+                        <thead>
+                            <tr>
+                                <th>Posisi</th>
+                                <th>Nama</th>
+                                <th>Kode</th>
+                                <th>Skor</th>
+                                <th>Kategori</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+                        
+        data.forEach((item, i) => {
+            html += `
+                <tr>
+                    <td class="fw-bold">#${i + 1}</td>
+                    <td>${item.nama}</td>
+                    <td>${item.kode}</td>
+                    <td><span class="badge bg-info">${item.skor}%</span></td>
+                    <td>${item.kategori}</td>
+                </tr>`;
+        });
+
+        html += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>`;
+
+        $('#visualisasi-ranking').html(html);
+    }).fail(() => {
+        $('#visualisasi-ranking').html(`<div class="alert alert-danger">Gagal load ranking.</div>`);
+    });
+}
+
+// FIX #2 — endpoint laporan benar: /api/laporan-data
+function loadLaporan() {
+    $.getJSON("/api/laporan-data", function (res) {
+        if (!res.nasabahs.length) {
+            $('#laporan-data').html(`<div class="alert alert-warning">Belum ada nasabah.</div>`);
+            return;
+        }
+
+        let html = `
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    Data Nasabah & Nilai Kriteria
+                </div>
+                <div class="card-body table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Kode</th>
+                            <th>Nama</th>`;
+        
+        res.kriterias.forEach(k => html += `<th>${k.kode}<br><small>${(k.bobot * 100).toFixed(0)}%</small></th>`);
+        
+        html += `</tr></thead><tbody>`;
+        
+        res.nasabahs.forEach(n => {
+            html += `<tr><td>${n.kode}</td><td>${n.nama}</td>`;
+            res.kriterias.forEach(k => {
+                html += `<td>${n.nilai[k.kode]}</td>`;
+            });
+            html += `</tr>`;
+        });
+
+        html += `</tbody></table></div></div>`;
+        $('#laporan-data').html(html);
+    }).fail(() => {
+        $('#laporan-data').html(`<div class="alert alert-danger">Gagal memuat laporan.</div>`);
+    });
+}
+</script>
+
+<style>
+.table th { font-weight: 600; }
+</style>
+{% endblock %}

@@ -1,0 +1,553 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block header %}Dashboard SPK Nasabah Terbaik{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Statistik -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-primary">
+                <h5 class="mb-0">📊 Statistik Sistem</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card text-white bg-info mb-3">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Total Nasabah</h5>
+                                <h2 class="card-text">{{ total_nasabah }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card text-white bg-success mb-3">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Total Kriteria</h5>
+                                <h2 class="card-text">{{ total_kriteria }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-info">
+                <h5 class="mb-0">🚀 Mulai Sekarang</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <a href="{{ url_for('alternatif') }}" class="btn btn-primary w-100 py-3">
+                            <h5 class="mb-1">👥 Tambah Nasabah</h5>
+                            <small class="d-block">Input data nasabah baru</small>
+                        </a>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <a href="{{ url_for('nilai_alternatif') }}" class="btn btn-success w-100 py-3">
+                            <h5 class="mb-1">📝 Input Nilai</h5>
+                            <small class="d-block">Isi nilai kriteria nasabah</small>
+                        </a>
+                    </div>
+                    <div class="col-12">
+                        <a href="{{ url_for('hasil_ranking') }}" class="btn btn-warning w-100 py-3">
+                            <h5 class="mb-1">🏆 Lihat Ranking</h5>
+                            <small class="d-block">Lihat hasil perhitungan SAW</small>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Visualisasi Ranking -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">📈 Visualisasi Ranking Nasabah</h5>
+            </div>
+            <div class="card-body">
+                {% if total_nasabah > 0 %}
+                <div class="row">
+                    <div class="col-md-8">
+                        <!-- Diagram Batang Horizontal -->
+                        <div id="rankingChart" style="height: 300px;"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <!-- Diagram Donut -->
+                        <div id="kategoriChart" style="height: 300px;"></div>
+                    </div>
+                </div>
+                
+                <!-- Tabel Ranking Ringkasan -->
+                <div class="table-responsive mt-4">
+                    <table class="table table-sm table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Ranking</th>
+                                <th>Nasabah</th>
+                                <th>Skor</th>
+                                <th>Kategori</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rankingTable">
+                            <!-- Data akan diisi oleh JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('hasil_ranking') }}" class="btn btn-primary">
+                        📊 Lihat Detail Ranking Lengkap
+                    </a>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <div class="display-1 text-muted">📊</div>
+                    <h4 class="text-muted">Belum ada data nasabah</h4>
+                    <p class="text-muted">Tambahkan data nasabah terlebih dahulu untuk melihat visualisasi ranking</p>
+                    <a href="{{ url_for('alternatif') }}" class="btn btn-primary mt-3">
+                        👥 Tambah Nasabah Pertama
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Kriteria -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-secondary">
+                <h5 class="mb-0">📋 Kriteria Penilaian Nasabah</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Kode</th>
+                                <th>Kriteria</th>
+                                <th>Atribut</th>
+                                <th>Bobot</th>
+                                <th>Skala Penilaian</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge bg-primary">C1</span></td>
+                                <td>Besarnya Jumlah Pinjaman</td>
+                                <td><span class="badge bg-success">Benefit</span></td>
+                                <td><strong>0.25</strong></td>
+                                <td>
+                                    <strong>Skor:</strong> 60-90<br>
+                                    • > Rp 50.000.000: <strong>90</strong><br>
+                                    • Rp 21-50 juta: <strong>80</strong><br>
+                                    • Rp 5-20 juta: <strong>70</strong><br>
+                                    • ≤ Rp 5 juta: <strong>60</strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-primary">C2</span></td>
+                                <td>Banyak Jumlah Tabungan</td>
+                                <td><span class="badge bg-success">Benefit</span></td>
+                                <td><strong>0.15</strong></td>
+                                <td>
+                                    <strong>Skor:</strong> 60-85<br>
+                                    • ≥ Rp 10.000.000: <strong>85</strong><br>
+                                    • Rp 5-9.999.999: <strong>70</strong><br>
+                                    • < Rp 5.000.000: <strong>60</strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-primary">C3</span></td>
+                                <td>Keaktifan</td>
+                                <td><span class="badge bg-danger">Cost</span></td>
+                                <td><strong>0.15</strong></td>
+                                <td>
+                                    <strong>Skor:</strong> 50-70<br>
+                                    • Sering Menunda: <strong>70</strong><br>
+                                    • Jarang Menunda: <strong>60</strong><br>
+                                    • Tidak Pernah Menunda: <strong>50</strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-primary">C4</span></td>
+                                <td>Lama Keanggotaan</td>
+                                <td><span class="badge bg-success">Benefit</span></td>
+                                <td><strong>0.20</strong></td>
+                                <td>
+                                    <strong>Skor:</strong> 55-75<br>
+                                    • ≥ 5 tahun: <strong>75</strong><br>
+                                    • 3–4 tahun: <strong>65</strong><br>
+                                    • < 3 tahun: <strong>55</strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-primary">C5</span></td>
+                                <td>Riwayat Tunggakan</td>
+                                <td><span class="badge bg-success">Benefit</span></td>
+                                <td><strong>0.25</strong></td>
+                                <td>
+                                    <strong>Skor:</strong> 60-80<br>
+                                    • Tidak pernah menunggak: <strong>80</strong><br>
+                                    • Pernah menunggak 1 kali: <strong>70</strong><br>
+                                    • Pernah menunggak ≥2 kali: <strong>60</strong>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-info">
+                                <td colspan="3" class="text-end"><strong>Total Bobot:</strong></td>
+                                <td><strong class="text-primary">1.00</strong></td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                
+                <div class="alert alert-info mt-3">
+                    <h6 class="mb-2"><strong>Keterangan:</strong></h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1">✅ <strong>Benefit:</strong> Semakin besar nilai semakin baik</p>
+                            <p class="mb-1">❌ <strong>Cost:</strong> Semakin kecil nilai semakin baik</p>
+                            <p class="mb-1">📊 <strong>Metode:</strong> Simple Additive Weighting (SAW)</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1">🏆 <strong>Tujuan:</strong> Pemilihan Nasabah Terbaik</p>
+                            <p class="mb-1">🎯 <strong>Reward:</strong> Penerima Reward Tahunan</p>
+                            <p class="mb-0">📈 <strong>Visualisasi:</strong> Diagram ranking otomatis</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Info Sistem -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary">
+                <h5 class="mb-0">💡 Sistem SPK Nasabah Terbaik</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center mb-3">
+                        <div class="p-3 border rounded bg-light">
+                            <h3 class="text-primary">1</h3>
+                            <h6>Input Data</h6>
+                            <p class="text-muted small">Tambahkan data nasabah</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center mb-3">
+                        <div class="p-3 border rounded bg-light">
+                            <h3 class="text-primary">2</h3>
+                            <h6>Input Nilai</h6>
+                            <p class="text-muted small">Isi nilai kriteria</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center mb-3">
+                        <div class="p-3 border rounded bg-light">
+                            <h3 class="text-primary">3</h3>
+                            <h6>Proses SAW</h6>
+                            <p class="text-muted small">Sistem hitung otomatis</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center mb-3">
+                        <div class="p-3 border rounded bg-light">
+                            <h3 class="text-primary">4</h3>
+                            <h6>Visualisasi</h6>
+                            <p class="text-muted small">Lihat diagram ranking</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Jika ada nasabah, load data ranking
+    {% if total_nasabah > 0 %}
+    console.log("Memuat data visualisasi...");
+    loadVisualisasiData();
+    {% endif %}
+    
+    function loadVisualisasiData() {
+        // Menggunakan API baru untuk visualisasi
+        $.ajax({
+            url: "{{ url_for('ranking_visual') }}",
+            method: 'GET',
+            success: function(response) {
+                console.log("Data API diterima:", response);
+                
+                if (response.success && response.data && response.data.length > 0) {
+                    renderCharts(response.data);
+                    renderRankingTable(response.data);
+                } else {
+                    // Fallback ke data contoh
+                    console.log("Menggunakan data contoh");
+                    const dataContoh = [
+                        { nama: "Ahmad", kode: "N001", skor: 95, kategori: "Sangat Baik" },
+                        { nama: "Budi", kode: "N002", skor: 82, kategori: "Baik" },
+                        { nama: "Citra", kode: "N003", skor: 78, kategori: "Baik" },
+                        { nama: "Dedi", kode: "N004", skor: 65, kategori: "Cukup" },
+                        { nama: "Eka", kode: "N005", skor: 58, kategori: "Perlu Perbaikan" }
+                    ];
+                    renderCharts(dataContoh);
+                    renderRankingTable(dataContoh);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error loading API:", error);
+                // Data contoh untuk debugging
+                const dataContoh = [
+                    { nama: "Ahmad", kode: "N001", skor: 95, kategori: "Sangat Baik" },
+                    { nama: "Budi", kode: "N002", skor: 82, kategori: "Baik" },
+                    { nama: "Citra", kode: "N003", skor: 78, kategori: "Baik" },
+                    { nama: "Dedi", kode: "N004", skor: 65, kategori: "Cukup" },
+                    { nama: "Eka", kode: "N005", skor: 58, kategori: "Perlu Perbaikan" }
+                ];
+                renderCharts(dataContoh);
+                renderRankingTable(dataContoh);
+            }
+        });
+    }
+    
+    function renderCharts(data) {
+        // Pastikan ECharts tersedia
+        if (typeof echarts === 'undefined') {
+            console.error("ECharts tidak ditemukan!");
+            return;
+        }
+        
+        console.log("Merender diagram dengan data:", data);
+        
+        // Siapkan data untuk diagram
+        const names = data.map(item => item.nama);
+        const scores = data.map(item => item.skor);
+        
+        // Hitung kategori untuk diagram donut
+        const kategoriCount = {};
+        data.forEach(item => {
+            kategoriCount[item.kategori] = (kategoriCount[item.kategori] || 0) + 1;
+        });
+        
+        // 1. Diagram Batang Horizontal
+        try {
+            const barChart = echarts.init(document.getElementById('rankingChart'));
+            const barOption = {
+                title: {
+                    text: 'Top ' + data.length + ' Nasabah Terbaik',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: function(params) {
+                        const item = data[params[0].dataIndex];
+                        return `
+                            <strong>${item.nama}</strong><br/>
+                            Kode: ${item.kode}<br/>
+                            Skor: ${item.skor}%<br/>
+                            Kategori: ${item.kategori}
+                        `;
+                    }
+                },
+                xAxis: {
+                    type: 'value',
+                    name: 'Skor (%)',
+                    max: 100,
+                    axisLabel: {
+                        formatter: '{value}%'
+                    }
+                },
+                yAxis: {
+                    type: 'category',
+                    data: names,
+                    inverse: true
+                },
+                series: [{
+                    name: 'Skor',
+                    type: 'bar',
+                    data: scores.map((score, index) => ({
+                        value: score,
+                        itemStyle: {
+                            color: getColorByScore(score)
+                        }
+                    })),
+                    label: {
+                        show: true,
+                        position: 'right',
+                        formatter: '{c}%'
+                    }
+                }]
+            };
+            barChart.setOption(barOption);
+            
+            // Responsive
+            window.addEventListener('resize', function() {
+                barChart.resize();
+            });
+        } catch (error) {
+            console.error("Error rendering bar chart:", error);
+            $('#rankingChart').html('<div class="alert alert-danger">Error rendering chart</div>');
+        }
+        
+        // 2. Diagram Donut
+        try {
+            const donutChart = echarts.init(document.getElementById('kategoriChart'));
+            const donutData = Object.keys(kategoriCount).map(kategori => ({
+                name: kategori,
+                value: kategoriCount[kategori]
+            }));
+            
+            const donutOption = {
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{a} <br/>{b}: {c} nasabah ({d}%)'
+                },
+                legend: {
+                    orient: 'vertical',
+                    left: 'left'
+                },
+                series: [{
+                    name: 'Kategori',
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: {
+                        borderRadius: 10,
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    },
+                    label: {
+                        show: true,
+                        formatter: '{b}: {c}'
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            fontSize: '14',
+                            fontWeight: 'bold'
+                        }
+                    },
+                    data: donutData
+                }]
+            };
+            donutChart.setOption(donutOption);
+            
+            // Responsive
+            window.addEventListener('resize', function() {
+                donutChart.resize();
+            });
+        } catch (error) {
+            console.error("Error rendering donut chart:", error);
+            $('#kategoriChart').html('<div class="alert alert-danger">Error rendering chart</div>');
+        }
+    }
+    
+    function getColorByScore(score) {
+        if (score >= 85) return '#4CAF50'; // Hijau
+        if (score >= 70) return '#8BC34A'; // Hijau muda
+        if (score >= 55) return '#FFC107'; // Kuning
+        return '#F44336'; // Merah
+    }
+    
+    function renderRankingTable(data) {
+        const tableBody = $('#rankingTable');
+        tableBody.empty();
+        
+        // Tampilkan maksimal 5 data
+        const displayData = data.slice(0, 5);
+        
+        displayData.forEach((item, index) => {
+            const row = `
+                <tr>
+                    <td>
+                        <span class="badge ${index < 3 ? 'bg-warning' : 'bg-secondary'}">
+                            #${index + 1}
+                        </span>
+                    </td>
+                    <td><strong>${item.nama}</strong><br><small class="text-muted">${item.kode}</small></td>
+                    <td>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar ${getProgressBarClass(item.skor)}" 
+                                 role="progressbar" 
+                                 style="width: ${item.skor}%"
+                                 aria-valuenow="${item.skor}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                                ${item.skor}%
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge ${getKategoriBadgeClass(item.kategori)}">
+                            ${item.kategori}
+                        </span>
+                    </td>
+                </tr>
+            `;
+            tableBody.append(row);
+        });
+        
+        if (data.length > 5) {
+            tableBody.append(`
+                <tr class="table-info">
+                    <td colspan="4" class="text-center">
+                        <small>+ ${data.length - 5} nasabah lainnya...</small>
+                    </td>
+                </tr>
+            `);
+        }
+    }
+    
+    function getProgressBarClass(score) {
+        if (score >= 85) return 'bg-success';
+        if (score >= 70) return 'bg-info';
+        if (score >= 55) return 'bg-warning';
+        return 'bg-danger';
+    }
+    
+    function getKategoriBadgeClass(kategori) {
+        if (kategori.includes('')) return 'bg-success';
+        if (kategori.includes('')) return 'bg-info';
+        if (kategori.includes('')) return 'bg-warning';
+        return 'bg-secondary';
+    }
+});
+</script>
+
+<style>
+#rankingChart, #kategoriChart {
+    width: 100%;
+    min-height: 300px;
+}
+
+.progress {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+</style>
+{% endblock %}

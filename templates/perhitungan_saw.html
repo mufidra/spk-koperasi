@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block title %}Perhitungan SAW{% endblock %}
+{% block header %}Perhitungan SAW (Simple Additive Weighting){% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Matriks Keputusan</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Alternatif</th>
+                        {% for kriteria in kriterias %}
+                        <th>{{ kriteria.kode }} ({{ kriteria.bobot }})</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in semua_nilai %}
+                    <tr>
+                        <td>
+                            <strong>{{ row.nasabah.kode }}</strong><br>
+                            <small>{{ row.nasabah.nama }}</small>
+                        </td>
+                        {% for kriteria in kriterias %}
+                        <td class="text-center">{{ row[kriteria.id] }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- TAMBAHKAN BAGIAN INI: MAX/MIN PER KRITERIA -->
+<div class="card mt-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0">📊 Nilai IDEAL per Kriteria (Dari Skala)</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Kriteria</th>
+                        <th>Tipe</th>
+                        <th>Skala</th>
+                        <th>MAX Ideal</th>
+                        <th>MIN Ideal</th>
+                        <th>Rumus Normalisasi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for kriteria in kriterias %}
+                    {% set ideal = nilai_ideal.get(kriteria.kode) %}
+                    <tr>
+                        <td>
+                            <strong>{{ kriteria.kode }}</strong><br>
+                            <small>{{ kriteria.nama }}</small>
+                        </td>
+                        <td>
+                            {% if kriteria.atribut == 'benefit' %}
+                            <span class="badge bg-success">Benefit</span>
+                            {% else %}
+                            <span class="badge bg-danger">Cost</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if kriteria.kode == 'C1' %}60-90
+                            {% elif kriteria.kode == 'C2' %}60-85
+                            {% elif kriteria.kode == 'C3' %}70-80
+                            {% elif kriteria.kode == 'C4' %}60-80
+                            {% elif kriteria.kode == 'C5' %}55-75
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if ideal and kriteria.atribut == 'benefit' %}
+                            <span class="badge bg-primary">{{ ideal.max }}</span>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if ideal and kriteria.atribut == 'cost' %}
+                            <span class="badge bg-warning text-dark">{{ ideal.min }}</span>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if ideal %}
+                                {% if kriteria.atribut == 'benefit' %}
+                                <code>rᵢⱼ = xᵢⱼ / {{ ideal.max }}</code>
+                                {% else %}
+                                <code>rᵢⱼ = {{ ideal.min }} / xᵢⱼ</code>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">Matriks Normalisasi</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Alternatif</th>
+                        {% for kriteria in kriterias %}
+                        <th>{{ kriteria.kode }}<br>
+                            <small class="text-muted">
+                                {% if kriteria.atribut == 'benefit' %}Benefit{% else %}Cost{% endif %}
+                            </small>
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row_index in range(matriks_normalisasi|length) %}
+                    {% set row = matriks_normalisasi[row_index] %}
+                    {% set nilai_asli = semua_nilai[row_index] %}
+                    <tr>
+                        <td>
+                            <strong>{{ row.nasabah.kode }}</strong><br>
+                            <small>{{ row.nasabah.nama }}</small>
+                        </td>
+                        {% for kriteria in kriterias %}
+                        <td class="text-center">
+                            {% if row[kriteria.id] %}
+                                {{ "%.3f"|format(row[kriteria.id]) }}
+                                {% if max_min_kriteria and kriteria.id in max_min_kriteria %}
+                                {% set info = max_min_kriteria[kriteria.id] %}
+                                <br>
+                                <small class="text-muted">
+                                    {% if kriteria.atribut == 'benefit' %}
+                                    = {{ nilai_asli[kriteria.id] }} / {{ "%.2f"|format(info.max) }}
+                                    {% else %}
+                                    = {{ "%.2f"|format(info.min) }} / {{ nilai_asli[kriteria.id] }}
+                                    {% endif %}
+                                </small>
+                                {% endif %}
+                            {% else %}
+                                0.000
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="alert alert-info mt-3">
+            <h6> Rumus Normalisasi SAW:</h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Benefit (Semakin besar semakin baik):</strong></p>
+                    <p class="text-center"><code>rᵢⱼ = xᵢⱼ / max(xⱼ)</code></p>
+                    <p><small>Dimana:<br>
+                    • rᵢⱼ = nilai normalisasi alternatif i pada kriteria j<br>
+                    • xᵢⱼ = nilai asli alternatif i pada kriteria j<br>
+                    • max(xⱼ) = nilai maksimum kriteria j</small></p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Cost (Semakin kecil semakin baik):</strong></p>
+                    <p class="text-center"><code>rᵢⱼ = min(xⱼ) / xᵢⱼ</code></p>
+                    <p><small>Dimana:<br>
+                    • min(xⱼ) = nilai minimum kriteria j<br>
+                    • Hasil normalisasi: 0 ≤ rᵢⱼ ≤ 1</small></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- BAGIAN PERHITUNGAN NILAI PREFERENSI (V_i) -->
+<div class="card mt-4">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0"> Perhitungan Nilai Preferensi (Vᵢ)</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered">
+                <thead>
+                    <tr class="table-primary">
+                        <th>Alternatif</th>
+                        {% for kriteria in kriterias %}
+                        <th class="text-center">
+                            {{ kriteria.kode }}<br>
+                            <small>w={{ kriteria.bobot }}</small>
+                        </th>
+                        {% endfor %}
+                        <th class="bg-warning text-dark">Nilai Akhir (Vᵢ)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for hasil in hasil_perhitungan %}
+                    <tr>
+                        <td>
+                            <strong>{{ hasil.nasabah.kode }}</strong><br>
+                            <small>{{ hasil.nasabah.nama }}</small>
+                        </td>
+                        {% for kriteria in kriterias %}
+                        <td class="text-center">
+                            {% set norm = hasil.normalisasi[kriteria.id] %}
+                            {% if norm %}
+                                {{ "%.3f"|format(norm) }} × {{ kriteria.bobot }}<br>
+                                <small class="text-muted">= {{ "%.3f"|format(norm * kriteria.bobot) }}</small>
+                            {% else %}
+                                0.000
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                        <td class="text-center bg-light">
+                            <strong>{{ "%.3f"|format(hasil.nilai_akhir) }}</strong>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="alert alert-success mt-3">
+            <h6> Rumus Nilai Preferensi:</h6>
+            <p class="text-center mb-2"><code>Vᵢ = Σ (wⱼ × rᵢⱼ)</code></p>
+            <p class="mb-0"><small>Dimana:<br>
+            • Vᵢ = Nilai preferensi alternatif i<br>
+            • wⱼ = Bobot kriteria j<br>
+            • rᵢⱼ = Nilai normalisasi alternatif i pada kriteria j<br>
+            • Σ = Penjumlahan untuk semua kriteria</small></p>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between mt-3">
+    <a href="{{ url_for('nilai_alternatif') }}" class="btn btn-secondary">← Kembali ke Nilai</a>
+    <a href="{{ url_for('hasil_ranking') }}" class="btn btn-primary">Lihat Hasil Ranking →</a>
+</div>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Profile{% endblock %}
+{% block header %}Profile Pengguna{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-person-circle"></i> Informasi Profil</h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="bi bi-person-badge-fill" style="font-size: 5rem; color: #4e73df;"></i>
+                </div>
+                <h4>{{ user.nama_lengkap or user.username }}</h4>
+                <p class="text-muted">@{{ user.username }}</p>
+                
+                <div class="mt-4">
+                    <p><strong>Role:</strong> 
+                        {% if user.role == 'admin' %}
+                            <span class="badge bg-danger">Administrator</span>
+                        {% else %}
+                            <span class="badge bg-secondary">User</span>
+                        {% endif %}
+                    </p>
+                    <p><strong>Bergabung:</strong> {{ user.created_at.strftime('%d %B %Y') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-key-fill"></i> Ubah Password</h5>
+            </div>
+            <div class="card-body">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <form method="POST" action="{{ url_for('ubah_password') }}">
+                    <div class="mb-3">
+                        <label for="password_lama" class="form-label">Password Lama</label>
+                        <input type="password" class="form-control" id="password_lama" 
+                               name="password_lama" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password_baru" class="form-label">Password Baru</label>
+                        <input type="password" class="form-control" id="password_baru" 
+                               name="password_baru" required minlength="6">
+                        <small class="text-muted">Minimal 6 karakter</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="konfirmasi" class="form-label">Konfirmasi Password Baru</label>
+                        <input type="password" class="form-control" id="konfirmasi" 
+                               name="konfirmasi" required>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Ubah Password
+                        </button>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informasi Sistem</h5>
+            </div>
+            <div class="card-body">
+                <p>Sistem SPK Koperasi ini digunakan untuk:</p>
+                <ul>
+                    <li>Pemilihan nasabah terbaik penerima reward tahunan</li>
+                    <li>Perhitungan menggunakan metode Simple Additive Weighting (SAW)</li>
+                    <li>Manajemen data nasabah dan kriteria penilaian</li>
+                    <li>Generasi laporan hasil perankingan</li>
+                </ul>
+                <p class="mb-0">
+                    <small class="text-muted">
+                        <i class="bi bi-shield-check"></i> 
+                        Sesi login Anda aktif sebagai {{ user.username }}
+                    </small>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

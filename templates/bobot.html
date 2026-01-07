@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Bobot Kriteria{% endblock %}
+{% block header %}Pengaturan Bobot Kriteria{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Form Pengaturan Bobot Kriteria</h5>
+        <a href="{{ url_for('kriteria') }}" class="btn btn-secondary">
+            ← Kembali ke Data Kriteria
+        </a>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('update_bobot') }}">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Kode</th>
+                            <th>Kriteria</th>
+                            <th>Atribut</th>
+                            <th>Bobot Saat Ini</th>
+                            <th>Bobot Baru</th>
+                            <th>Keterangan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for kriteria in kriterias %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-primary">{{ kriteria.kode }}</span>
+                            </td>
+                            <td>{{ kriteria.nama }}</td>
+                            <td>
+                                {% if kriteria.atribut == 'benefit' %}
+                                <span class="badge bg-success">Benefit</span>
+                                {% else %}
+                                <span class="badge bg-danger">Cost</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ kriteria.bobot }}</span>
+                            </td>
+                            <td>
+                                <input type="number" class="form-control" 
+                                       name="bobot_{{ kriteria.id }}" 
+                                       value="{{ kriteria.bobot }}" 
+                                       step="0.01" min="0" max="1" required
+                                       style="width: 100px;">
+                            </td>
+                            <td>
+                                {% if kriteria.keterangan %}
+                                <small class="text-muted">
+                                    {% for line in kriteria.keterangan.split('\n')[:2] %}
+                                        {% if line.strip() %}
+                                        {{ line }}<br>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if kriteria.keterangan.split('\n')|length > 2 %}
+                                    ...
+                                    {% endif %}
+                                </small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-info">
+                            <td colspan="3" class="text-end"><strong>Total Bobot:</strong></td>
+                            <td><strong>{{ total_bobot }}</strong></td>
+                            <td id="total-bobot-new">-</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            
+            
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('kriteria') }}" class="btn btn-secondary">Kembali</a>
+                <button type="submit" class="btn btn-primary" id="submit-btn">Update Bobot</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Hitung total bobot saat input berubah
+    function hitungTotalBobot() {
+        let total = 0;
+        $('input[name^="bobot_"]').each(function() {
+            total += parseFloat($(this).val()) || 0;
+        });
+        $('#total-bobot-new').text(total.toFixed(2));
+        
+        // Warna dan tombol berdasarkan total
+        const isExact = Math.abs(total - 1.0) < 0.01;
+        const isClose = Math.abs(total - 1.0) < 0.1;
+        
+        if (isExact) {
+            $('#total-bobot-new').removeClass('text-danger text-warning').addClass('text-success');
+            $('#submit-btn').prop('disabled', false).removeClass('btn-secondary').addClass('btn-primary');
+        } else if (isClose) {
+            $('#total-bobot-new').removeClass('text-danger text-success').addClass('text-warning');
+            $('#submit-btn').prop('disabled', false).removeClass('btn-secondary').addClass('btn-warning');
+        } else {
+            $('#total-bobot-new').removeClass('text-warning text-success').addClass('text-danger');
+            $('#submit-btn').prop('disabled', true).addClass('btn-secondary').removeClass('btn-primary btn-warning');
+        }
+    }
+    
+    $('input[name^="bobot_"]').on('input', hitungTotalBobot);
+    
+    // Trigger pertama kali
+    hitungTotalBobot();
+});
+</script>
+{% endblock %}

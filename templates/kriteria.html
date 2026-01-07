@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Data Kriteria{% endblock %}
+{% block header %}Data Kriteria Penilaian{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Daftar Kriteria</h5>
+        <a href="{{ url_for('tambah_kriteria') }}" class="btn btn-primary">
+            + Tambah Kriteria
+        </a>
+    </div>
+    <div class="card-body">
+        {% if kriterias %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Kode</th>
+                        <th>Kriteria</th>
+                        <th>Atribut</th>
+                        <th>Bobot</th>
+                        <th>Keterangan Skor</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for kriteria in kriterias %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>
+                            <span class="badge bg-primary">{{ kriteria.kode }}</span>
+                        </td>
+                        <td>
+                            <strong>{{ kriteria.nama }}</strong>
+                        </td>
+                        <td>
+                            {% if kriteria.atribut == 'benefit' %}
+                            <span class="badge bg-success">Benefit</span>
+                            {% else %}
+                            <span class="badge bg-danger">Cost</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ kriteria.bobot }}</span>
+                        </td>
+                        <td>
+                            {% if kriteria.keterangan %}
+                            <div style="max-height: 100px; overflow-y: auto; font-size: 0.85rem;">
+                                {% for line in kriteria.keterangan.split('\n') %}
+                                    {% if line.strip() %}
+                                    <div class="border-bottom pb-1 mb-1">{{ line }}</div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('edit_kriteria', id=kriteria.id) }}" 
+                               class="btn btn-sm btn-warning">Edit</a>
+                            <a href="{{ url_for('hapus_kriteria', id=kriteria.id) }}" 
+                               class="btn btn-sm btn-danger" 
+                               onclick="return confirm('Yakin hapus kriteria ini?')">Hapus</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="table-info">
+                        <td colspan="4" class="text-end"><strong>Total Bobot:</strong></td>
+                        <td>
+                            <strong class="text-primary">
+                                {{ kriterias|sum(attribute='bobot')|round(2) }}
+                            </strong>
+                        </td>
+                        <td colspan="2"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

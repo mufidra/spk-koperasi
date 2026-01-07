@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>SPK Nasabah Terbaik - {% block title %}{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v={{ css_version }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            background: #f8f9fa;
+        }
+
+        /* Sidebar */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            height: 100vh;
+            background: linear-gradient(180deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .nav-link {
+            color: rgba(255,255,255,0.85);
+            padding: 12px 20px;
+            margin: 4px 10px;
+            border-radius: 8px;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+
+        /* Navbar atas */
+        .topbar {
+            position: fixed;
+            left: 250px;
+            right: 0;
+            height: 60px;
+            background: white;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 25px;
+            z-index: 900;
+        }
+
+        /* Content */
+        .content {
+            margin-left: 250px;
+            padding: 90px 25px 25px;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+    <div class="sidebar-header">
+        <h4 class="mb-0">SPK Nasabah</h4>
+        <small>Penerima Reward</small>
+    </div>
+
+    <ul class="nav flex-column mt-3">
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint=='dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
+                <i class="bi bi-speedometer2 me-2"></i>Dashboard
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint=='alternatif' %}active{% endif %}" href="{{ url_for('alternatif') }}">
+                <i class="bi bi-people me-2"></i>Data Alternatif
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint=='kriteria' %}active{% endif %}" href="{{ url_for('kriteria') }}">
+                <i class="bi bi-list-check me-2"></i>Data Kriteria
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint=='bobot' %}active{% endif %}" href="{{ url_for('bobot') }}">
+                <i class="bi bi-bar-chart me-2"></i>Bobot Kriteria
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint=='nilai_alternatif' %}active{% endif %}" href="{{ url_for('nilai_alternatif') }}">
+                <i class="bi bi-clipboard-data me-2"></i>Nilai Alternatif
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint=='perhitungan_saw' %}active{% endif %}" href="{{ url_for('perhitungan_saw') }}">
+                <i class="bi bi-calculator me-2"></i>Perhitungan SAW
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint=='hasil_ranking' %}active{% endif %}" href="{{ url_for('hasil_ranking') }}">
+                <i class="bi bi-trophy me-2"></i>Hasil Ranking
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint=='laporan' %}active{% endif %}" href="{{ url_for('laporan') }}">
+                <i class="bi bi-file-text me-2"></i>Laporan
+            </a>
+        </li>
+    </ul>
+</nav>
+
+<!-- TOPBAR -->
+<div class="topbar">
+    {% if current_user.is_authenticated %}
+    <div class="dropdown">
+        <a class="btn btn-light dropdown-toggle" href="#" data-bs-toggle="dropdown">
+            <i class="bi bi-person-circle"></i> {{ current_user.username }}
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </div>
+    {% endif %}
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+    <h2 class="mb-4">{% block header %}{% endblock %}</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
